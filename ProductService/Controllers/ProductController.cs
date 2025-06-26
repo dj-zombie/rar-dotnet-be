@@ -107,18 +107,31 @@ namespace ProductService.Controllers
                 {
                     Size = v.Name.Split(' ')[0],
                     Color = v.Name.Split(' ').Skip(1).FirstOrDefault() ?? ""
+                }).ToList(),
+                Images = productDto.Images.Select(i => new ProductImage
+                {
+                    ImageUrl = i.ImageUrl,
+                    AltText = i.AltText,
+                    SortOrder = i.SortOrder
                 }).ToList()
             };
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            productDto.Id = product.Id;
-            for (int i = 0; i < product.Variants.Count; i++)
-                productDto.Variants[i].Id = product.Variants.ElementAt(i).Id;
+            // Convert to lists so we can index them
+            var savedVariants = product.Variants.ToList();
+            var savedImages = product.Images.ToList();
+
+            for (int i = 0; i < savedVariants.Count; i++)
+                productDto.Variants[i].Id = savedVariants[i].Id;
+
+            for (int i = 0; i < savedImages.Count; i++)
+                productDto.Images[i].Id = savedImages[i].Id;
 
             return CreatedAtAction(nameof(GetById), new { id = product.Id }, productDto);
         }
+
 
         // PUT /product/{id}
         [HttpPut("{id:int}")]
@@ -129,15 +142,11 @@ namespace ProductService.Controllers
 
             var product = await _context.Products
                 .Include(p => p.Variants)
+                .Include(p => p.Images)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null)
                 return NotFound();
-
-            product.Name = productDto.Name;
-            product.Price = productDto.Price;
-            product.Description = productDto.Description;
-            product.MainImageUrl = productDto.MainImageUrl;
 
             var category = await _context.Categories
                 .FirstOrDefaultAsync(c => c.Name == productDto.CategoryName);
@@ -145,19 +154,33 @@ namespace ProductService.Controllers
             if (category == null)
                 return BadRequest("Invalid category name.");
 
+            product.Name = productDto.Name;
+            product.Price = productDto.Price;
+            product.Description = productDto.Description;
+            product.MainImageUrl = productDto.MainImageUrl;
             product.CategoryId = category.Id;
 
+            // Update Variants
             _context.ProductVariants.RemoveRange(product.Variants);
-
             product.Variants = productDto.Variants.Select(v => new ProductVariant
             {
                 Size = v.Name.Split(' ')[0],
                 Color = v.Name.Split(' ').Skip(1).FirstOrDefault() ?? ""
             }).ToList();
 
+            // Update Images
+            _context.ProductImages.RemoveRange(product.Images);
+            product.Images = productDto.Images.Select(i => new ProductImage
+            {
+                ImageUrl = i.ImageUrl,
+                AltText = i.AltText,
+                SortOrder = i.SortOrder
+            }).ToList();
+
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
 
         // DELETE /product/{id}
         [HttpDelete("{id:int}")]
