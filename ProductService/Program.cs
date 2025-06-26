@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ProductService.Data;
 using ProductService;
+using ProductService.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,8 +18,8 @@ var app = builder.Build();
 // Seed the database
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-    await SeedData.InitializeAsync(services); // 👈 this passes IServiceProvider
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    SeedData.Initialize(context);
 }
 
 if (app.Environment.IsDevelopment())

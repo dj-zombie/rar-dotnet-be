@@ -1,11 +1,9 @@
 namespace ProductService.Models;
 
-public class ProductVariant
+public class ProductSize
 {
     public int Id { get; set; }
-    public string Size { get; set; } = null!;
-    public string Color { get; set; } = null!;
-    public int Stock { get; set; }
+    public string SizeName { get; set; } = null!;
 
     public int ProductId { get; set; }
     public Product Product { get; set; } = null!;

@@ -19,26 +19,40 @@ namespace ProductService.Controllers
 
         // GET /product
         [HttpGet]
-        public async Task<ActionResult<List<ProductDto>>> GetAll()
+        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
         {
             var products = await _context.Products
+                .Include(p => p.Category)
                 .Include(p => p.Variants)
+                .Include(p => p.Images)
+                .Select(p => new ProductDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Price = p.Price,
+                    Description = p.Description,
+                    MainImageUrl = p.MainImageUrl,
+                    CategoryName = p.Category.Name,
+                    Variants = p.Variants.Select(v => new ProductVariantDto
+                    {
+                        Id = v.Id,
+                        Name = $"{v.Size} {v.Color}".Trim(),
+                        AdditionalPrice = 0m
+                    }).ToList(),
+                    Images = p.Images
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => new ProductImageDto
+                        {
+                            Id = i.Id,
+                            ImageUrl = i.ImageUrl,
+                            AltText = i.AltText,
+                            SortOrder = i.SortOrder
+                        }).ToList()
+
+                })
                 .ToListAsync();
 
-            var productDtos = products.Select(p => new ProductDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Price = p.Price,
-                Variants = p.Variants.Select(v => new VariantDto
-                {
-                    Id = v.Id,
-                    Name = $"{v.Size} {v.Color}".Trim(),
-                    AdditionalPrice = 0m // adjust as needed
-                }).ToList()
-            }).ToList();
-
-            return Ok(productDtos);
+            return Ok(products);
         }
 
         // GET /product/{id}
@@ -46,6 +60,7 @@ namespace ProductService.Controllers
         public async Task<ActionResult<ProductDto>> GetById(int id)
         {
             var product = await _context.Products
+                .Include(p => p.Category)
                 .Include(p => p.Variants)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
@@ -57,7 +72,10 @@ namespace ProductService.Controllers
                 Id = product.Id,
                 Name = product.Name,
                 Price = product.Price,
-                Variants = product.Variants.Select(v => new VariantDto
+                Description = product.Description,
+                MainImageUrl = product.MainImageUrl,
+                CategoryName = product.Category?.Name ?? "",
+                Variants = product.Variants.Select(v => new ProductVariantDto
                 {
                     Id = v.Id,
                     Name = $"{v.Size} {v.Color}".Trim(),
@@ -72,15 +90,23 @@ namespace ProductService.Controllers
         [HttpPost]
         public async Task<ActionResult<ProductDto>> Create([FromBody] ProductDto productDto)
         {
+            var category = await _context.Categories
+                .FirstOrDefaultAsync(c => c.Name == productDto.CategoryName);
+
+            if (category == null)
+                return BadRequest("Invalid category name.");
+
             var product = new Product
             {
                 Name = productDto.Name,
                 Price = productDto.Price,
+                Description = productDto.Description,
+                MainImageUrl = productDto.MainImageUrl,
+                CategoryId = category.Id,
                 Variants = productDto.Variants.Select(v => new ProductVariant
                 {
                     Size = v.Name.Split(' ')[0],
-                    Color = v.Name.Split(' ').Skip(1).FirstOrDefault() ?? "",
-                    // You might want to add AdditionalPrice logic here if stored separately
+                    Color = v.Name.Split(' ').Skip(1).FirstOrDefault() ?? ""
                 }).ToList()
             };
 
@@ -110,14 +136,23 @@ namespace ProductService.Controllers
 
             product.Name = productDto.Name;
             product.Price = productDto.Price;
+            product.Description = productDto.Description;
+            product.MainImageUrl = productDto.MainImageUrl;
 
-            // Update variants: simple approach - remove old variants and add new ones
+            var category = await _context.Categories
+                .FirstOrDefaultAsync(c => c.Name == productDto.CategoryName);
+
+            if (category == null)
+                return BadRequest("Invalid category name.");
+
+            product.CategoryId = category.Id;
+
             _context.ProductVariants.RemoveRange(product.Variants);
 
             product.Variants = productDto.Variants.Select(v => new ProductVariant
             {
                 Size = v.Name.Split(' ')[0],
-                Color = v.Name.Split(' ').Skip(1).FirstOrDefault() ?? "",
+                Color = v.Name.Split(' ').Skip(1).FirstOrDefault() ?? ""
             }).ToList();
 
             await _context.SaveChangesAsync();
@@ -137,16 +172,14 @@ namespace ProductService.Controllers
 
             _context.ProductVariants.RemoveRange(product.Variants);
             _context.Products.Remove(product);
-
             await _context.SaveChangesAsync();
             return NoContent();
         }
 
-        // --- VARIANTS CRUD ---
+        // ---------------- VARIANTS CRUD ----------------
 
-        // GET /product/{productId}/variants
         [HttpGet("{productId:int}/variants")]
-        public async Task<ActionResult<List<VariantDto>>> GetVariants(int productId)
+        public async Task<ActionResult<List<ProductVariantDto>>> GetVariants(int productId)
         {
             var product = await _context.Products
                 .Include(p => p.Variants)
@@ -155,7 +188,7 @@ namespace ProductService.Controllers
             if (product == null)
                 return NotFound();
 
-            var variants = product.Variants.Select(v => new VariantDto
+            var variants = product.Variants.Select(v => new ProductVariantDto
             {
                 Id = v.Id,
                 Name = $"{v.Size} {v.Color}".Trim(),
@@ -165,9 +198,8 @@ namespace ProductService.Controllers
             return Ok(variants);
         }
 
-        // GET /product/{productId}/variants/{variantId}
         [HttpGet("{productId:int}/variants/{variantId:int}")]
-        public async Task<ActionResult<VariantDto>> GetVariant(int productId, int variantId)
+        public async Task<ActionResult<ProductVariantDto>> GetVariant(int productId, int variantId)
         {
             var variant = await _context.ProductVariants
                 .FirstOrDefaultAsync(v => v.Id == variantId && v.ProductId == productId);
@@ -175,19 +207,16 @@ namespace ProductService.Controllers
             if (variant == null)
                 return NotFound();
 
-            var variantDto = new VariantDto
+            return Ok(new ProductVariantDto
             {
                 Id = variant.Id,
                 Name = $"{variant.Size} {variant.Color}".Trim(),
                 AdditionalPrice = 0m
-            };
-
-            return Ok(variantDto);
+            });
         }
 
-        // POST /product/{productId}/variants
         [HttpPost("{productId:int}/variants")]
-        public async Task<ActionResult<VariantDto>> CreateVariant(int productId, [FromBody] VariantDto variantDto)
+        public async Task<ActionResult<ProductVariantDto>> CreateVariant(int productId, [FromBody] ProductVariantDto variantDto)
         {
             var product = await _context.Products.FindAsync(productId);
             if (product == null)
@@ -196,8 +225,8 @@ namespace ProductService.Controllers
             var variant = new ProductVariant
             {
                 ProductId = productId,
-                Size = variantDto.Name.Split(' ')[0],
-                Color = variantDto.Name.Split(' ').Skip(1).FirstOrDefault() ?? ""
+                Size = variantDto.Name,
+                Color = variantDto.Name
             };
 
             _context.ProductVariants.Add(variant);
@@ -207,9 +236,8 @@ namespace ProductService.Controllers
             return CreatedAtAction(nameof(GetVariant), new { productId, variantId = variant.Id }, variantDto);
         }
 
-        // PUT /product/{productId}/variants/{variantId}
         [HttpPut("{productId:int}/variants/{variantId:int}")]
-        public async Task<IActionResult> UpdateVariant(int productId, int variantId, [FromBody] VariantDto variantDto)
+        public async Task<IActionResult> UpdateVariant(int productId, int variantId, [FromBody] ProductVariantDto variantDto)
         {
             if (variantId != variantDto.Id)
                 return BadRequest("ID mismatch");
@@ -220,14 +248,13 @@ namespace ProductService.Controllers
             if (variant == null)
                 return NotFound();
 
-            variant.Size = variantDto.Name.Split(' ')[0];
-            variant.Color = variantDto.Name.Split(' ').Skip(1).FirstOrDefault() ?? "";
+            variant.Size = variantDto.Name;
+            variant.Color = variantDto.Name;
 
             await _context.SaveChangesAsync();
             return NoContent();
         }
 
-        // DELETE /product/{productId}/variants/{variantId}
         [HttpDelete("{productId:int}/variants/{variantId:int}")]
         public async Task<IActionResult> DeleteVariant(int productId, int variantId)
         {
@@ -241,5 +268,94 @@ namespace ProductService.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        // ---------------- IMAGES CRUD ----------------
+
+        [ApiController]
+        [Route("products/{productId}/images")]
+        public class ProductImagesController : ControllerBase
+        {
+            private readonly AppDbContext _context;
+
+            public ProductImagesController(AppDbContext context)
+            {
+                _context = context;
+            }
+
+            [HttpGet]
+            public async Task<ActionResult<IEnumerable<ProductImageDto>>> GetImages(int productId)
+            {
+                var images = await _context.ProductImages
+                    .Where(img => img.ProductId == productId)
+                    .OrderBy(img => img.SortOrder)
+                    .Select(img => new ProductImageDto
+                    {
+                        Id = img.Id,
+                        ImageUrl = img.ImageUrl,
+                        AltText = img.AltText,
+                        SortOrder = img.SortOrder
+                    }).ToListAsync();
+
+                return Ok(images);
+            }
+
+            [HttpPost]
+            public async Task<ActionResult<ProductImageDto>> AddImage(int productId, [FromBody] ProductImageDto imageDto)
+            {
+                var product = await _context.Products.FindAsync(productId);
+                if (product == null)
+                    return NotFound();
+
+                var image = new ProductImage
+                {
+                    ImageUrl = imageDto.ImageUrl,
+                    AltText = imageDto.AltText,
+                    SortOrder = imageDto.SortOrder,
+                    ProductId = productId
+                };
+
+                _context.ProductImages.Add(image);
+                await _context.SaveChangesAsync();
+
+                imageDto.Id = image.Id;
+                return CreatedAtAction(nameof(GetImages), new { productId }, imageDto);
+            }
+
+            [HttpDelete("{imageId}")]
+            public async Task<IActionResult> DeleteImage(int productId, int imageId)
+            {
+                var image = await _context.ProductImages
+                    .FirstOrDefaultAsync(img => img.Id == imageId && img.ProductId == productId);
+
+                if (image == null)
+                    return NotFound();
+
+                _context.ProductImages.Remove(image);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+
+            [HttpPut("{imageId}")]
+            public async Task<IActionResult> UpdateImage(int productId, int imageId, [FromBody] ProductImageDto imageDto)
+            {
+                if (imageId != imageDto.Id)
+                    return BadRequest("ID mismatch");
+
+                var image = await _context.ProductImages
+                    .FirstOrDefaultAsync(img => img.Id == imageId && img.ProductId == productId);
+
+                if (image == null)
+                    return NotFound();
+
+                image.ImageUrl = imageDto.ImageUrl;
+                image.AltText = imageDto.AltText;
+                image.SortOrder = imageDto.SortOrder;
+
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
+        }
+
     }
 }

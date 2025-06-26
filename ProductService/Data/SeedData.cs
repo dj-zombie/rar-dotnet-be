@@ -2,29 +2,43 @@ using Microsoft.Extensions.DependencyInjection;
 using ProductService.Data;
 using ProductService.Models;
 
-namespace ProductService;
+namespace ProductService.Data;
 
 public static class SeedData
 {
-    public static async Task InitializeAsync(IServiceProvider serviceProvider)
+    public static void Initialize(AppDbContext context)
     {
-        using var context = serviceProvider.GetRequiredService<AppDbContext>();
+        if (context.Categories.Any())
+            return; // DB has already been seeded
 
-        if (!context.Products.Any())
+        var category = new Category { Name = "Apparel" };
+
+        var product = new Product
         {
-            var product1 = new Product
+            Name = "Basic Tee",
+            Price = 19.99M,
+            Description = "A comfortable, plain t-shirt.",
+            MainImageUrl = "/images/tee.jpg",
+            Category = category,
+            Variants = new List<ProductVariant>
             {
-                Name = "Zombie Juice",
-                Price = 9.99m,
-                Variants = new List<ProductVariant>
-                {
-                    new ProductVariant { Size = "Small", Color = "Red", Stock = 10 },
-                    new ProductVariant { Size = "Large", Color = "Green", Stock = 5 }
-                }
-            };
+                new ProductVariant { Size = "M", Color = "Black", Stock = 20 },
+                new ProductVariant { Size = "L", Color = "White", Stock = 15 }
+            },
+            Sizes = new List<ProductSize>
+            {
+                new ProductSize { SizeName = "M" },
+                new ProductSize { SizeName = "L" }
+            },
+            Images = new List<ProductImage>
+            {
+                new ProductImage { ImageUrl = "/images/tee-front.jpg" },
+                new ProductImage { ImageUrl = "/images/tee-back.jpg" }
+            }
+        };
 
-            context.Products.Add(product1);
-            await context.SaveChangesAsync();
-        }
+        context.Categories.Add(category);
+        context.Products.Add(product);
+        context.SaveChanges();
     }
 }
