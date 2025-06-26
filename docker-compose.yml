@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres
+    container_name: rotandruin-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: fjmqli
+      POSTGRES_DB: rotandruin
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  productservice:
+    build:
+      context: ./ProductService
+    container_name: product-service
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=rotandruin;Username=postgres;Password=fjmqli
+    ports:
+      - "5000:8080"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
