@@ -133,7 +133,6 @@ namespace ProductService.Controllers
         }
 
 
-        // PUT /product/{id}
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] ProductDto productDto)
         {
@@ -160,7 +159,7 @@ namespace ProductService.Controllers
             product.MainImageUrl = productDto.MainImageUrl;
             product.CategoryId = category.Id;
 
-            // Update Variants
+            // ---- Update Variants (remove and re-add is okay here) ----
             _context.ProductVariants.RemoveRange(product.Variants);
             product.Variants = productDto.Variants.Select(v => new ProductVariant
             {
@@ -168,19 +167,39 @@ namespace ProductService.Controllers
                 Color = v.Name.Split(' ').Skip(1).FirstOrDefault() ?? ""
             }).ToList();
 
-            // Update Images
-            _context.ProductImages.RemoveRange(product.Images);
-            product.Images = productDto.Images.Select(i => new ProductImage
+            // ---- Update Images (preserve IDs) ----
+            // 1. Remove any images not present in DTO
+            var dtoImageIds = productDto.Images.Select(i => i.Id).ToHashSet();
+            var imagesToRemove = product.Images.Where(i => !dtoImageIds.Contains(i.Id)).ToList();
+            _context.ProductImages.RemoveRange(imagesToRemove);
+
+            // 2. Update or add images
+            foreach (var imageDto in productDto.Images)
             {
-                ImageUrl = i.ImageUrl,
-                AltText = i.AltText,
-                SortOrder = i.SortOrder
-            }).ToList();
+                var existing = product.Images.FirstOrDefault(i => i.Id == imageDto.Id);
+
+                if (existing != null)
+                {
+                    // Update existing
+                    existing.ImageUrl = imageDto.ImageUrl;
+                    existing.AltText = imageDto.AltText;
+                    existing.SortOrder = imageDto.SortOrder;
+                }
+                else
+                {
+                    // Add new image
+                    product.Images.Add(new ProductImage
+                    {
+                        ImageUrl = imageDto.ImageUrl,
+                        AltText = imageDto.AltText,
+                        SortOrder = imageDto.SortOrder
+                    });
+                }
+            }
 
             await _context.SaveChangesAsync();
             return NoContent();
         }
-
 
         // DELETE /product/{id}
         [HttpDelete("{id:int}")]
