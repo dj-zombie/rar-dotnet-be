@@ -2,7 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using ProductService.Services;
 using ProductService.Dtos;
 using System.Threading.Tasks;
-
+using ProductService.Services.Interfaces;
+using ProductService.Dtos.Models;
+using ProductService.Dtos.Requests;
+using ProductService.Dtos.Responses;
 namespace ProductService.Controllers
 {
     [ApiController]
@@ -31,19 +34,19 @@ namespace ProductService.Controllers
 
         // POST /product
         [HttpPost]
-        public async Task<ActionResult<ProductDto>> Create([FromBody] ProductDto productDto)
+        public async Task<ActionResult<ProductDto>> Create([FromBody] CreateProductRequest request)
         {
-            var createdProduct = await _productService.CreateAsync(productDto);
+            var createdProduct = await _productService.CreateAsync(request);
             return CreatedAtAction(nameof(GetById), new { id = createdProduct.Id }, createdProduct);
         }
 
         // PUT /product/{id}
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] ProductDto productDto)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateProductRequest request)
         {
             try
             {
-                await _productService.UpdateAsync(id, productDto);
+                await _productService.UpdateAsync(id, request);
                 return NoContent();
             }
             catch (InvalidOperationException)

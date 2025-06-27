@@ -3,6 +3,8 @@ using ProductService.Data;
 using ProductService;
 using ProductService.Models;
 using ProductService.Services;
+using ProductService.Services.Interfaces;
+using ProductService.Services.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 

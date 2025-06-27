@@ -6,6 +6,7 @@ public class ProductImage
     public string ImageUrl { get; set; } = null!;
     public string AltText { get; set; } = string.Empty;
     public int SortOrder { get; set; }
+    // public bool IsMainImage { get; set; }
     public int ProductId { get; set; }
     public Product Product { get; set; } = null!;
 }

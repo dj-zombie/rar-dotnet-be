@@ -1,11 +1,14 @@
-// ProductService/Dtos/Requests/CreateProductRequest.cs
+// Dtos/Responses/GetProductResponse.cs
 using System.ComponentModel.DataAnnotations;
 using ProductService.Dtos.Models;
 
-namespace ProductService.Dtos.Requests
+namespace ProductService.Dtos.Responses
 {
-    public class CreateProductRequest
+    public class GetProductResponse
     {
+        [Required]
+        public int Id { get; set; }
+
         [Required]
         [StringLength(100)]
         public string Name { get; set; } = string.Empty;
@@ -18,14 +21,16 @@ namespace ProductService.Dtos.Requests
         public string? Description { get; set; }
 
         [Required]
-    [Url]
-    public string MainImageUrl { get; set; } = string.Empty;
+        [Url]
+        public string MainImageUrl { get; set; } = string.Empty;
 
         [Required]
         public string CategoryName { get; set; } = string.Empty;
 
+        public bool IsActive { get; set; }
+        public bool IsFeatured { get; set; }
+
         public ICollection<ProductVariantDto> Variants { get; set; } = new List<ProductVariantDto>();
         public ICollection<ProductImageDto> Images { get; set; } = new List<ProductImageDto>();
-
     }
 }

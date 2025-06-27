@@ -10,7 +10,7 @@ namespace ProductService.Services.Interfaces
         Task<IEnumerable<ProductResponse>> GetProductsAsync();
         Task<ProductResponse?> GetByIdAsync(int id);
         Task<ProductResponse> CreateAsync(CreateProductRequest request);
-        Task UpdateAsync(int id, CreateProductRequest request);
+        Task UpdateAsync(int id, UpdateProductRequest request);
         Task DeleteAsync(int id);
         Task<List<ProductVariantDto>> GetVariantsAsync(int productId);
     }

@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProductService.Data;
-using ProductService.Dtos;
+using ProductService.Dtos.Models;
 using ProductService.Models;
+using ProductService.Dtos.Requests;
+using ProductService.Dtos.Responses;
 
 namespace ProductService.Controllers
 {
@@ -19,12 +21,12 @@ namespace ProductService.Controllers
 
         // GET: /product/{productId}/images
         [HttpGet]
-        public async Task<ActionResult<List<ProductImageDto>>> GetImages(int productId)
+        public async Task<ActionResult<List<ProductImageResponse>>> GetImages(int productId)
         {
             var images = await _context.ProductImages
                 .Where(i => i.ProductId == productId)
                 .OrderBy(i => i.SortOrder)
-                .Select(i => new ProductImageDto
+                .Select(i => new ProductImageResponse
                 {
                     Id = i.Id,
                     ImageUrl = i.ImageUrl,
@@ -38,7 +40,7 @@ namespace ProductService.Controllers
 
         // POST: /product/{productId}/images
         [HttpPost]
-        public async Task<ActionResult<ProductImageDto>> CreateImage(int productId, [FromBody] ProductImageDto imageDto)
+        public async Task<ActionResult<ProductImageResponse>> CreateImage(int productId, [FromBody] CreateProductImageRequest request)
         {
             var product = await _context.Products.FindAsync(productId);
             if (product == null) return NotFound();
@@ -46,33 +48,38 @@ namespace ProductService.Controllers
             var image = new ProductImage
             {
                 ProductId = productId,
-                ImageUrl = imageDto.ImageUrl,
-                AltText = imageDto.AltText,
-                SortOrder = imageDto.SortOrder
+                ImageUrl = request.ImageUrl,
+                AltText = request.AltText ?? "",
+                SortOrder = request.SortOrder,
             };
 
             _context.ProductImages.Add(image);
             await _context.SaveChangesAsync();
 
-            imageDto.Id = image.Id;
+            var response = new ProductImageResponse
+            {
+                Id = image.Id,
+                ProductId = image.ProductId,
+                ImageUrl = image.ImageUrl,
+                AltText = image.AltText,
+                SortOrder = image.SortOrder,
+            };
 
-            return CreatedAtAction(nameof(GetImages), new { productId }, imageDto);
+            return CreatedAtAction(nameof(GetImages), new { productId }, response);
         }
 
         // PUT: /product/{productId}/images/{imageId}
         [HttpPut("{imageId:int}")]
-        public async Task<IActionResult> UpdateImage(int productId, int imageId, [FromBody] ProductImageDto imageDto)
+        public async Task<IActionResult> UpdateImage(int productId, int imageId, [FromBody] CreateProductImageRequest request)
         {
-            if (imageId != imageDto.Id) return BadRequest("ID mismatch");
-
             var image = await _context.ProductImages
                 .FirstOrDefaultAsync(i => i.Id == imageId && i.ProductId == productId);
 
             if (image == null) return NotFound();
 
-            image.ImageUrl = imageDto.ImageUrl;
-            image.AltText = imageDto.AltText;
-            image.SortOrder = imageDto.SortOrder;
+            image.ImageUrl = request.ImageUrl;
+            image.AltText = request.AltText ?? "";
+            image.SortOrder = request.SortOrder;
 
             await _context.SaveChangesAsync();
 
