@@ -15,16 +15,16 @@ A RESTful API service built with ASP.NET Core that manages products, their varia
 ```
 ProductService/
 ├── Controllers/          # API controllers
-├── Data/               # Database context and migrations
-├── Dtos/               # Data Transfer Objects
-│   ├── Models/         # Shared DTO models
-│   ├── Requests/       # Request DTOs
-│   └── Responses/      # Response DTOs
-├── Models/             # Entity models
-├── Services/           # Business logic services
-│   ├── Interfaces/    # Service interfaces
-│   └── Implementations/ # Service implementations
-└── Program.cs         # Application entry point
+├── Data/                 # Database context and migrations
+├── Dtos/                 # Data Transfer Objects
+│   ├── Models/           # Shared DTO models
+│   ├── Requests/         # Request DTOs
+│   └── Responses/        # Response DTOs
+├── Models/                 # Entity models
+├── Services/             # Business logic services
+│   ├── Interfaces/       # Service interfaces
+│   └── Implementations/  # Service implementations
+└── Program.cs            # Application entry point
 ```
 
 ## Getting Started
@@ -33,7 +33,7 @@ ProductService/
 
 - .NET 7.0 SDK or later
 - PostgreSQL database
-- Docker (optional)
+- Docker
 
 ### Installation
 
