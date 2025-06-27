@@ -6,6 +6,9 @@ obj/
 *.suo
 *.userprefs
 
+# NuGet
+.nuget/packages/
+
 # Visual Studio
 .vs/
 *.ntvs*
