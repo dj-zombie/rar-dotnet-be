@@ -12,7 +12,8 @@ namespace ProductService.Dtos.Responses
         public string? Description { get; set; }
         public string MainImageUrl { get; set; } = string.Empty;
         public string CategoryName { get; set; } = string.Empty;
-        public ICollection<ProductVariantDto> Variants { get; set; } = new List<ProductVariantDto>();
-        public ICollection<ProductImageDto> Images { get; set; } = new List<ProductImageDto>();
+        public int CategoryId { get; set; }
+        public ICollection<ProductVariantResponse> Variants { get; set; } = new List<ProductVariantResponse>();
+        public ICollection<ProductImageResponse> Images { get; set; } = new List<ProductImageResponse>();
     }
 }

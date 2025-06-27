@@ -32,7 +32,8 @@ namespace ProductService.Services.Implementations
                     Description = p.Description,
                     MainImageUrl = p.MainImageUrl,
                     CategoryName = p.Category.Name,
-                    Variants = p.Variants.Select(v => new ProductVariantDto
+                    CategoryId = p.CategoryId,
+                    Variants = p.Variants.Select(v => new ProductVariantResponse
                     {
                         Id = v.Id,
                         Name = $"{v.Size} {v.Color}".Trim(),
@@ -40,7 +41,7 @@ namespace ProductService.Services.Implementations
                     }).ToList(),
                     Images = p.Images
                         .OrderBy(i => i.SortOrder)
-                        .Select(i => new ProductImageDto
+                        .Select(i => new ProductImageResponse
                         {
                             Id = i.Id,
                             ImageUrl = i.ImageUrl,
@@ -69,7 +70,8 @@ namespace ProductService.Services.Implementations
                 Description = product.Description,
                 MainImageUrl = product.MainImageUrl,
                 CategoryName = product.Category?.Name ?? "",
-                Variants = product.Variants.Select(v => new ProductVariantDto
+                CategoryId = product.CategoryId,
+                Variants = product.Variants.Select(v => new ProductVariantResponse
                 {
                     Id = v.Id,
                     Name = $"{v.Size} {v.Color}".Trim(),
@@ -116,8 +118,9 @@ namespace ProductService.Services.Implementations
                 Price = product.Price,
                 Description = product.Description,
                 MainImageUrl = product.MainImageUrl,
+                CategoryId = product.CategoryId,
                 CategoryName = product.Category?.Name ?? "",
-                Variants = product.Variants.Select(v => new ProductVariantDto
+                Variants = product.Variants.Select(v => new ProductVariantResponse
                 {
                     Id = v.Id,
                     Name = $"{v.Size} {v.Color}".Trim(),
@@ -126,7 +129,7 @@ namespace ProductService.Services.Implementations
             };
         }
 
-        public async Task UpdateAsync(int id, UpdateProductRequest request)
+        public async Task<ProductResponse> UpdateAsync(int id, UpdateProductRequest request)
         {
             var product = await _context.Products
                 .Include(p => p.Variants)
@@ -186,9 +189,26 @@ namespace ProductService.Services.Implementations
             }
 
             await _context.SaveChangesAsync();
+
+            return new ProductResponse
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Price = product.Price,
+                Description = product.Description,
+                MainImageUrl = product.MainImageUrl,
+                CategoryName = product.Category?.Name ?? "",
+                CategoryId = product.CategoryId,
+                Variants = product.Variants.Select(v => new ProductVariantResponse
+                {
+                    Id = v.Id,
+                    Name = $"{v.Size} {v.Color}".Trim(),
+                    AdditionalPrice = 0m
+                }).ToList()
+            };
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<ProductResponse> DeleteAsync(int id)
         {
             var product = await _context.Products
                 .Include(p => p.Variants)
@@ -200,9 +220,26 @@ namespace ProductService.Services.Implementations
             _context.ProductVariants.RemoveRange(product.Variants);
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
+
+            return new ProductResponse
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Price = product.Price,
+                Description = product.Description,
+                MainImageUrl = product.MainImageUrl,
+                CategoryName = product.Category?.Name ?? "",
+                CategoryId = product.CategoryId,  // Add this line
+                Variants = product.Variants.Select(v => new ProductVariantResponse
+                {
+                    Id = v.Id,
+                    Name = $"{v.Size} {v.Color}".Trim(),
+                    AdditionalPrice = 0m
+                }).ToList()
+            };
         }
 
-        public async Task<List<ProductVariantDto>> GetVariantsAsync(int productId)
+        public async Task<List<ProductVariantResponse>> GetVariantsAsync(int productId)
         {
             var product = await _context.Products
                 .Include(p => p.Variants)
@@ -210,13 +247,18 @@ namespace ProductService.Services.Implementations
 
             if (product == null)
                 throw new InvalidOperationException("Product not found");
-
-            return product.Variants.Select(v => new ProductVariantDto
+        
+            return product.Variants.Select(v => new ProductVariantResponse
             {
                 Id = v.Id,
+                ProductId = v.ProductId,
+                Size = v.Size,
+                Color = v.Color,
+                Stock = v.Stock,
                 Name = $"{v.Size} {v.Color}".Trim(),
                 AdditionalPrice = 0m
             }).ToList();
+            
         }
     }
 }

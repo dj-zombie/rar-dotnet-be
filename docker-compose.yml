@@ -17,14 +17,20 @@ services:
   productservice:
     build:
       context: ./ProductService
+      dockerfile: Dockerfile
     container_name: product-service
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=rotandruin;Username=postgres;Password=fjmqli
     ports:
       - "5000:8080"
+    volumes:
+      - ./ProductService:/app
+      - ./.nuget/packages:/root/.nuget/packages
     depends_on:
       - db
+    entrypoint: ["dotnet", "watch", "run", "--no-launch-profile", "ProductService.dll"]
 
 volumes:
   postgres_data:

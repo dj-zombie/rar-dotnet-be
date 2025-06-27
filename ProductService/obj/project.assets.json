@@ -3361,19 +3361,19 @@
     ]
   },
   "packageFolders": {
-    "/home/zombie/.nuget/packages/": {}
+    "/root/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/zombie/git/dotnet/rot-and-ruin-productservice/ProductService/ProductService.csproj",
+      "projectUniqueName": "/app/ProductService.csproj",
       "projectName": "ProductService",
-      "projectPath": "/home/zombie/git/dotnet/rot-and-ruin-productservice/ProductService/ProductService.csproj",
-      "packagesPath": "/home/zombie/.nuget/packages/",
-      "outputPath": "/home/zombie/git/dotnet/rot-and-ruin-productservice/ProductService/obj/",
+      "projectPath": "/app/ProductService.csproj",
+      "packagesPath": "/root/.nuget/packages/",
+      "outputPath": "/app/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/zombie/.nuget/NuGet/NuGet.Config"
+        "/root/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -3391,6 +3391,11 @@
         "warnAsError": [
           "NU1605"
         ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
       }
     },
     "frameworks": {
@@ -3439,7 +3444,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.117/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.411/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

@@ -56,13 +56,13 @@ namespace ProductService.Controllers
         }
 
         // DELETE /product/{id}
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpDelete("DeleteById{id:int}")]
+        public async Task<ActionResult<ProductResponse>> Delete(int id)
         {
             try
             {
-                await _productService.DeleteAsync(id);
-                return NoContent();
+                var deletedProduct = await _productService.DeleteAsync(id);
+                return Ok(deletedProduct);
             }
             catch (InvalidOperationException)
             {
