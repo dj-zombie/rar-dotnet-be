@@ -1,5 +1,6 @@
 // ProductService/Dtos/Responses/ProductResponse.cs
 using System.ComponentModel.DataAnnotations;
+using ProductService.Dtos.Models;
 
 namespace ProductService.Dtos.Responses
 {

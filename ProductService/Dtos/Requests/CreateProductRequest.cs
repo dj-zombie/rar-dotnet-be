@@ -1,5 +1,6 @@
 // ProductService/Dtos/Requests/CreateProductRequest.cs
 using System.ComponentModel.DataAnnotations;
+using ProductService.Dtos.Models;
 
 namespace ProductService.Dtos.Requests
 {
@@ -25,5 +26,6 @@ namespace ProductService.Dtos.Requests
 
         public ICollection<ProductVariantDto> Variants { get; set; } = new List<ProductVariantDto>();
         public ICollection<ProductImageDto> Images { get; set; } = new List<ProductImageDto>();
+
     }
 }

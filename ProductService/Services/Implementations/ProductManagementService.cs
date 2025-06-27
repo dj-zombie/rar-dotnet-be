@@ -1,10 +1,10 @@
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ProductService.Data;
-using ProductService.Dtos;
-using ProductService.Models;
+using ProductService.Dtos.Models;
+using ProductService.Services.Interfaces;
 
-namespace ProductService.Services
+namespace ProductService.Services.Implementations
 {
     public class ProductManagementService : IProductService
     {
@@ -83,19 +83,19 @@ namespace ProductService.Services
             if (category == null)
                 throw new InvalidOperationException("Invalid category name.");
 
-            var product = new Product
+            var product = new ProductDto
             {
                 Name = productDto.Name,
                 Price = productDto.Price,
                 Description = productDto.Description,
                 MainImageUrl = productDto.MainImageUrl,
-                CategoryId = category.Id,
-                Variants = productDto.Variants.Select(v => new ProductVariant
+                CategoryName = category.Name,
+                Variants = productDto.Variants.Select(v => new ProductVariantDto
                 {
-                    Size = v.Name.Split(' ')[0],
-                    Color = v.Name.Split(' ').Skip(1).FirstOrDefault() ?? ""
+                    // Size = v.Name.Split(' ')[0],
+                    // Color = v.Name.Split(' ').Skip(1).FirstOrDefault() ?? ""
                 }).ToList(),
-                Images = productDto.Images.Select(i => new ProductImage
+                Images = productDto.Images.Select(i => new ProductImageDto
                 {
                     ImageUrl = i.ImageUrl,
                     AltText = i.AltText,
@@ -146,7 +146,7 @@ namespace ProductService.Services
 
             // Update variants
             _context.ProductVariants.RemoveRange(product.Variants);
-            product.Variants = productDto.Variants.Select(v => new ProductVariant
+            product.Variants = productDto.Variants.Select(v => new ProductVariantDto
             {
                 Size = v.Name.Split(' ')[0],
                 Color = v.Name.Split(' ').Skip(1).FirstOrDefault() ?? ""
@@ -169,7 +169,7 @@ namespace ProductService.Services
                 }
                 else
                 {
-                    product.Images.Add(new ProductImage
+                    product.Images.Add(new ProductImageDto
                     {
                         ImageUrl = imageDto.ImageUrl,
                         AltText = imageDto.AltText,
