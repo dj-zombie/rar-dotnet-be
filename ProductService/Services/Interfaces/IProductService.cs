@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-using ProductService.Dtos.Models;
 using ProductService.Dtos.Requests;
 using ProductService.Dtos.Responses;
 

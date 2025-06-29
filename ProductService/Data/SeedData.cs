@@ -25,11 +25,11 @@ public static class SeedData
                 new ProductVariant { Size = "M", Color = "Black", Stock = 20 },
                 new ProductVariant { Size = "L", Color = "White", Stock = 15 }
             },
-            Sizes = new List<ProductSize>
-            {
-                new ProductSize { SizeName = "M" },
-                new ProductSize { SizeName = "L" }
-            },
+            // Sizes = new List<ProductSize>
+            // {
+            //     new ProductSize { SizeName = "M" },
+            //     new ProductSize { SizeName = "L" }
+            // },
             Images = new List<ProductImage>
             {
                 new ProductImage { ImageUrl = "/images/tee-front.jpg" },
